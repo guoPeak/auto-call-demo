@@ -61,6 +61,7 @@
     name: '主流程',
     path: '/mainProcess',
     component: './botManage/mainProcess',
+    hideInMenu: true,
   },
   //   {
   //     path: '/',

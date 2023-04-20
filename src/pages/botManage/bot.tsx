@@ -91,9 +91,9 @@ const TableList: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  // useEffect(() => {
-  // getList({})
-  // })
+  useEffect(() => {
+    getList({});
+  }, []);
 
   // setTimeout(() => {
   //     getList({})
