@@ -1,57 +1,17 @@
 import { PlusOutlined } from '@ant-design/icons';
-import { Button, Modal, Input, Drawer, Form, Row, Col, Select, Card } from 'antd';
-import React, { useState, useRef, useEffect } from 'react';
+import { Button, Modal, Input, Form, Row, Col, Select, Card } from 'antd';
+import React, { useState, useEffect } from 'react';
 // import { PageContainer, FooterToolbar } from '@ant-design/pro-layout';
 import BotCard from './components/botCard';
 import { getBotList, createBotTalk } from './service';
 import { history } from 'umi';
+import {
+  BOT_STATUS as botStatus,
+  BOT_RANAGE as BotRanage,
+  INDUSTRY as industryDict,
+} from '@/config/dict';
 
 import './bot.less';
-
-const botStatus = [
-  {
-    label: '待发布',
-    value: 0,
-  },
-  {
-    label: '审核中',
-    value: 1,
-  },
-  {
-    label: '已发布',
-    value: 2,
-  },
-];
-// 全部（全公司的）、我负责的、所属或下属部门的
-const BotRanage = [
-  {
-    label: '全部（全公司的）',
-    value: 0,
-  },
-  {
-    label: '我负责的',
-    value: 1,
-  },
-  {
-    label: '所属或下属部门的',
-    value: 2,
-  },
-];
-
-const industryDict = [
-  {
-    label: '养老行业',
-    value: 0,
-  },
-  {
-    label: '服务业',
-    value: 1,
-  },
-  {
-    label: '医疗健康',
-    value: 2,
-  },
-];
 
 const TableList: React.FC = () => {
   const [buttonLoading, setButtonLoading] = useState<boolean>(false);
@@ -102,7 +62,7 @@ const TableList: React.FC = () => {
   const cardClick = (card: any) => {
     console.log('cardClick', card);
     history.push({
-      pathname: '/mainProcess',
+      pathname: `/botManage/mainProcess`,
       query: {
         id: card.id,
       },
@@ -179,7 +139,7 @@ const TableList: React.FC = () => {
       {/* </div> */}
 
       <Modal
-        title="Basic Modal"
+        title="新建"
         open={isModalOpen}
         onOk={handleOk}
         onCancel={handleCancel}

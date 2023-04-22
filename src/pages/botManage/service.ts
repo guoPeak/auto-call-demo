@@ -33,3 +33,10 @@ export async function getTalkProcessById(data: any) {
     data,
   });
 }
+
+export async function updateTalkProcessById(data: any) {
+  return request('/salesTalk/updateSalesTalkInstSort', {
+    method: 'POST',
+    data,
+  });
+}

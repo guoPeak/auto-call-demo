@@ -42,9 +42,7 @@ export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) =
     disableContentMargin: false,
 
     // footerRender: () => <Footer />,
-    onPageChange: () => {
-      // const { location } = history;
-    },
+    onPageChange: () => {},
     menuHeaderRender: undefined,
     // 自定义 403 页面
     // unAccessible: <div>unAccessible</div>,
@@ -76,9 +74,11 @@ export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) =
 
 // 全局请求
 const requestInterceptor = (url: string, options: RequestConfig) => {
+  console.log('requestInterceptor', REACT_APP_ENV);
   return {
     // url: defaultSettings.baseUrl + url, // 此处可以添加域名前缀
-    url: url,
+    // url: '/api' + url,
+    url,
     options: {
       ...options,
       headers: {

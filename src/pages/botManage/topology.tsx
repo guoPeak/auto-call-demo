@@ -1,4 +1,5 @@
-import { Button, Tag } from 'antd';
+import { Button, Tag, Modal, Form, Input, Spin } from 'antd';
+import type { FormInstance } from 'antd/es/form';
 import React, { useState, useRef } from 'react';
 import type {
   ITopologyNode,
@@ -8,10 +9,15 @@ import type {
 import { Topology, topologyWrapper, TemplateWrapper } from '@byai/topology';
 import '@byai/topology/dist/lib/index.css';
 import './index.less';
-import { getBranchDefaultConfig, getTalkProcessById } from '../service';
+import {
+  getBranchDefaultConfig,
+  getTalkProcessById,
+  saveTalkProcess,
+  updateTalkProcessById,
+} from './service';
 import { history } from 'umi';
 import Sortable from '@/components/Sortable/Sortable';
-import SortableItem from '@/components/Sortable/Item';
+// import SortableItem from '@/components/Sortable/Item';
 
 interface FlowState {
   data: ITopologyData;
@@ -21,6 +27,9 @@ interface FlowState {
   canConnectMultiLines?: boolean;
   branchConfig?: any[];
   leftProcess?: any[];
+  isModalOpen?: boolean;
+  modalLoading?: boolean;
+  listLoading?: boolean;
 }
 
 const switchType = (type: number) => {
@@ -92,6 +101,9 @@ class Flow extends React.Component<{}, FlowState> {
     canConnectMultiLines: false,
     branchConfig: [],
     leftProcess: [],
+    isModalOpen: false,
+    modalLoading: false,
+    listLoading: false,
   };
   // eslint-disable-next-line
   topology: any = null;
@@ -122,15 +134,23 @@ class Flow extends React.Component<{}, FlowState> {
     console.log(data);
   };
 
-  async componentDidMount() {
-    this.getDefaultConfig();
+  async getTalkProcess() {
     const { query } = history.location;
+    this.setState({
+      listLoading: true,
+    });
     const list = await getTalkProcessById({
       id: query?.id,
     });
     this.setState({
       leftProcess: list,
+      listLoading: false,
     });
+  }
+
+  async componentDidMount() {
+    this.getDefaultConfig();
+    await this.getTalkProcess();
   }
 
   renderTreeNode = (data: ITopologyNode, { anchorDecorator }: IWrapperOptions) => {
@@ -157,7 +177,7 @@ class Flow extends React.Component<{}, FlowState> {
     console.log('data => type', data, type);
   };
 
-  setList(newList: any) {
+  async setList(newList: any) {
     console.log('setList==', newList);
     // return newList.map((item: any) => {
     //     return (
@@ -166,9 +186,23 @@ class Flow extends React.Component<{}, FlowState> {
     //         </div>
     //     )
     // })
+    // const data = []
+    // const list  = []
+    // newList.forEach((item: any, index: number) => {
+    //     data.push({
+    //         id: item.id,
+    //         sort: index,
+    //     })
+    // })
     this.setState({
       leftProcess: newList.map((item: any) => item.data),
     });
+    // const data = newList.map((item: any, index: number) => ({ id: item.data.id, sort: index }))
+    // await saveTalkProcess({
+    //     botId: history.location.query?.id,
+    //     innerSorts: data
+    // })
+    // await this.getTalkProcess()
   }
 
   getList() {
@@ -192,8 +226,55 @@ class Flow extends React.Component<{}, FlowState> {
     });
   }
 
+  formRef = React.createRef<FormInstance>();
+
+  handleOk() {
+    this.formRef.current!.validateFields().then(({ name }) => {
+      this.setState({
+        modalLoading: true,
+      });
+      const { query } = history.location;
+      saveTalkProcess({
+        botId: query?.id,
+        name,
+        sort: this.state.leftProcess?.length || 0,
+      })
+        .then(() => {
+          this.setState({
+            modalLoading: false,
+            isModalOpen: false,
+          });
+          this.getTalkProcess();
+        })
+        .finally(() => {
+          this.setState({
+            modalLoading: false,
+          });
+        });
+    });
+  }
+
+  handleCancel() {
+    this.setState({
+      isModalOpen: false,
+    });
+  }
+
+  afterClose() {
+    this.formRef.current!.resetFields();
+  }
+
   render() {
-    const { data, readonly, showBar, overlap, canConnectMultiLines } = this.state;
+    const {
+      data,
+      readonly,
+      showBar,
+      overlap,
+      canConnectMultiLines,
+      isModalOpen,
+      modalLoading,
+      listLoading,
+    } = this.state;
     const mockLineColor = {
       0: '#82BEFF',
       1: '#FFA39E',
@@ -201,11 +282,16 @@ class Flow extends React.Component<{}, FlowState> {
     };
     return (
       <div className="topology">
-        <div className="left-topology">
-          <Button type="primary" style={{ width: '100%' }}>
-            添加
-          </Button>
-          {/* <div className='list'>
+        <Spin spinning={listLoading}>
+          <div className="left-topology">
+            <Button
+              type="primary"
+              onClick={() => this.setState({ isModalOpen: true })}
+              style={{ width: '100%' }}
+            >
+              添加
+            </Button>
+            {/* <div className='list'>
                         {this.state.leftProcess?.map((item, i) => {
                             return (
                                 <SortableItem key={i} onSortItems={this.onSortItems.bind(this)} items={this.state.leftProcess} sortId={i}>
@@ -216,8 +302,27 @@ class Flow extends React.Component<{}, FlowState> {
                             )
                         })}
                     </div> */}
-          <Sortable list={this.getList()} setList={this.setList.bind(this)} />
-        </div>
+            <Sortable list={this.getList()} setList={this.setList.bind(this)} />
+            <Modal
+              title="新增流程节点"
+              open={isModalOpen}
+              onOk={this.handleOk.bind(this)}
+              onCancel={this.handleCancel.bind(this)}
+              okButtonProps={{ loading: modalLoading }}
+              afterClose={this.afterClose.bind(this)}
+            >
+              <Form layout="inline" ref={this.formRef}>
+                <Form.Item
+                  label="流程名称"
+                  name="name"
+                  rules={[{ required: true, message: '请输入流程名称' }]}
+                >
+                  <Input placeholder="请输入流程名称" />
+                </Form.Item>
+              </Form>
+            </Modal>
+          </div>
+        </Spin>
         <div className="right-topology">
           <div className="top-header">
             <TemplateWrapper generator={() => this.generatorNodeData(1)}>
