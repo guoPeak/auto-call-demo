@@ -62,10 +62,10 @@ const TableList: React.FC = () => {
   const cardClick = (card: any) => {
     console.log('cardClick', card);
     history.push({
-      pathname: `/botManage/mainProcess`,
-      query: {
-        id: card.id,
-      },
+      pathname: `/process/${card.id}`,
+      // query: {
+      //     id: card.id,
+      // },
     });
   };
 

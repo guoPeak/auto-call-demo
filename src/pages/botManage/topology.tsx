@@ -1,5 +1,6 @@
-import { Button, Tag, Modal, Form, Input, Spin } from 'antd';
+import { Button, Tag, Modal, Form, Input, Spin, Popconfirm } from 'antd';
 import type { FormInstance } from 'antd/es/form';
+import { DeleteOutlined } from '@ant-design/icons';
 import React, { useState, useRef } from 'react';
 import type {
   ITopologyNode,
@@ -14,10 +15,14 @@ import {
   getTalkProcessById,
   saveTalkProcess,
   updateTalkProcessById,
+  saveTalkProcessById,
+  getTalkProcessTaskById,
+  deleteTalkProcessById,
 } from './service';
-import { history } from 'umi';
+import { history, withRouter } from 'umi';
 import Sortable from '@/components/Sortable/Sortable';
 // import SortableItem from '@/components/Sortable/Item';
+import TalkDrawer from './components/talkDrawer';
 
 interface FlowState {
   data: ITopologyData;
@@ -30,6 +35,8 @@ interface FlowState {
   isModalOpen?: boolean;
   modalLoading?: boolean;
   listLoading?: boolean;
+  containerLoading?: boolean;
+  openDrawer?: boolean;
 }
 
 const switchType = (type: number) => {
@@ -39,26 +46,32 @@ const switchType = (type: number) => {
     case 2:
       return '跳转节点';
     case 3:
-      return '结束节点';
+      return '条件跳转节点';
+    case 4:
+      return '挂机';
     default:
       return '普通节点';
       break;
   }
 };
 
-const rondomTagColor = (type: number) => {
-  switch (type) {
-    case 1:
-      return 'magenta';
-    case 2:
-      return 'red';
-    case 3:
-      return 'orange';
-    case 4:
-      return 'green';
-    default:
-      return 'blue';
-  }
+const rondomTagColor = {
+  1: {
+    bgColor: 'rgb(240, 249, 255)',
+    color: 'rgb(30, 102, 204)',
+  },
+  2: {
+    color: 'rgb(183, 21, 34)',
+    bgColor: 'rgb(255, 241, 240)',
+  },
+  3: {
+    color: 'rgba(0, 0, 0, 0.65)',
+    bgColor: 'rgb(239, 245, 249)',
+  },
+  4: {
+    color: 'rgb(179, 82, 13)',
+    bgColor: 'rgb(255, 244, 225)',
+  },
 };
 class Flow extends React.Component<{}, FlowState> {
   state: FlowState = {
@@ -104,9 +117,19 @@ class Flow extends React.Component<{}, FlowState> {
     isModalOpen: false,
     modalLoading: false,
     listLoading: false,
+    containerLoading: false,
+    openDrawer: false,
   };
   // eslint-disable-next-line
   topology: any = null;
+
+  talkId = null;
+
+  setOpenDrawer(val: boolean) {
+    this.setState({
+      openDrawer: val,
+    });
+  }
 
   getDefaultConfig = async () => {
     const res = await getBranchDefaultConfig();
@@ -123,10 +146,12 @@ class Flow extends React.Component<{}, FlowState> {
   generatorNodeData = (type: number) => {
     return {
       id: `${Date.now()}`,
+      type,
       name: switchType(type),
       content: '',
       branches: this.state.branchConfig,
       dragChild: false,
+      nextAction: '执行下一步',
     };
   };
 
@@ -135,13 +160,17 @@ class Flow extends React.Component<{}, FlowState> {
   };
 
   async getTalkProcess() {
-    const { query } = history.location;
+    console.log('getTalkProcess', history);
     this.setState({
       listLoading: true,
     });
     const list = await getTalkProcessById({
-      id: query?.id,
+      id: this.talkId,
     });
+    list.forEach((item: any, index: number) => {
+      item.selected = !index;
+    });
+    list.sort((a, b) => a.sort - b.sort);
     this.setState({
       leftProcess: list,
       listLoading: false,
@@ -149,25 +178,37 @@ class Flow extends React.Component<{}, FlowState> {
   }
 
   async componentDidMount() {
+    // eslint-disable-next-line
+    const id = this.props.match.params.id;
+    this.talkId = id;
     this.getDefaultConfig();
     await this.getTalkProcess();
   }
 
   renderTreeNode = (data: ITopologyNode, { anchorDecorator }: IWrapperOptions) => {
-    const { name = '', content = '', branches = [] } = data;
+    const { name = '', content = '', branches = [], type, nextAction } = data;
     return (
-      <div className="topology-node">
+      <div className="topology-node" onDoubleClick={() => this.setOpenDrawer(true)}>
         <div className="node-header">{name}</div>
         <p className="node-content">{content}</p>
-        {branches.length > 0 && (
+        {branches.length > 0 && type === 1 && (
           <div className="flow-node-branches-wrapper">
-            {branches.map((item: any, index: number) =>
-              anchorDecorator({
+            {branches.map((item: any, index: number) => {
+              const itemColor = rondomTagColor[item.type] || rondomTagColor[3];
+              return anchorDecorator({
                 anchorId: `${index}`,
-              })(<Tag color={rondomTagColor(item.type)}>{item.name}</Tag>),
-            )}
+              })(
+                <span
+                  className="flow-node-branch"
+                  style={{ backgroundColor: itemColor.bgColor, color: itemColor.color }}
+                >
+                  {item.name}
+                </span>,
+              );
+            })}
           </div>
         )}
+        {type === 2 && <div className="next-step">下一步：{nextAction}</div>}
       </div>
     );
   };
@@ -197,12 +238,45 @@ class Flow extends React.Component<{}, FlowState> {
     this.setState({
       leftProcess: newList.map((item: any) => item.data),
     });
-    // const data = newList.map((item: any, index: number) => ({ id: item.data.id, sort: index }))
-    // await saveTalkProcess({
-    //     botId: history.location.query?.id,
-    //     innerSorts: data
-    // })
-    // await this.getTalkProcess()
+    const data = newList.map((item: any, index: number) => ({ id: item.data.id, sort: index }));
+    await updateTalkProcessById({
+      innerSorts: data,
+    });
+    await this.getTalkProcess();
+  }
+
+  handleTalkClick(id: string) {
+    const list = this.state.leftProcess;
+    list?.forEach((item: any) => {
+      item.selected = item.id === id;
+    });
+    this.setState({
+      leftProcess: list,
+      containerLoading: true,
+    });
+    getTalkProcessTaskById({
+      // 根据流程id查询task
+      botId: this.talkId,
+      id,
+    }).then((res) => {
+      this.setState({
+        containerLoading: false,
+        data: {
+          lines: res.lines || [],
+          nodes: res.nodes || [],
+        },
+      });
+    });
+  }
+
+  async deleteProcess(event: Event, id: number) {
+    event.stopPropagation();
+    console.log('deleteProcess', id);
+    await deleteTalkProcessById({
+      botId: this.talkId,
+      id,
+    });
+    await this.getTalkProcess();
   }
 
   getList() {
@@ -211,8 +285,19 @@ class Flow extends React.Component<{}, FlowState> {
         key: item.id,
         data: item,
         children: (
-          <div key={item.id} className="list-item">
+          <div
+            key={item.id}
+            className={item.selected ? 'list-item active' : 'list-item'}
+            onClick={() => this.handleTalkClick(item.id)}
+          >
             {item.name}
+            <Popconfirm
+              title="确定要删除该流程？"
+              onCancel={(e) => e.stopPropagation()}
+              onConfirm={(event) => this.deleteProcess(event, item.id)}
+            >
+              <DeleteOutlined className="delete-icon" onClick={(e) => e.stopPropagation()} />
+            </Popconfirm>
           </div>
         ),
       };
@@ -233,9 +318,8 @@ class Flow extends React.Component<{}, FlowState> {
       this.setState({
         modalLoading: true,
       });
-      const { query } = history.location;
       saveTalkProcess({
-        botId: query?.id,
+        botId: this.talkId,
         name,
         sort: this.state.leftProcess?.length || 0,
       })
@@ -274,6 +358,8 @@ class Flow extends React.Component<{}, FlowState> {
       isModalOpen,
       modalLoading,
       listLoading,
+      containerLoading,
+      openDrawer,
     } = this.state;
     const mockLineColor = {
       0: '#82BEFF',
@@ -281,17 +367,18 @@ class Flow extends React.Component<{}, FlowState> {
       2: '#FFC89E',
     };
     return (
-      <div className="topology">
-        <Spin spinning={listLoading}>
-          <div className="left-topology">
-            <Button
-              type="primary"
-              onClick={() => this.setState({ isModalOpen: true })}
-              style={{ width: '100%' }}
-            >
-              添加
-            </Button>
-            {/* <div className='list'>
+      <Spin spinning={containerLoading}>
+        <div className="topology">
+          <Spin spinning={listLoading}>
+            <div className="left-topology">
+              <Button
+                type="primary"
+                onClick={() => this.setState({ isModalOpen: true })}
+                style={{ width: '100%' }}
+              >
+                添加
+              </Button>
+              {/* <div className='list'>
                         {this.state.leftProcess?.map((item, i) => {
                             return (
                                 <SortableItem key={i} onSortItems={this.onSortItems.bind(this)} items={this.state.leftProcess} sortId={i}>
@@ -302,62 +389,76 @@ class Flow extends React.Component<{}, FlowState> {
                             )
                         })}
                     </div> */}
-            <Sortable list={this.getList()} setList={this.setList.bind(this)} />
-            <Modal
-              title="新增流程节点"
-              open={isModalOpen}
-              onOk={this.handleOk.bind(this)}
-              onCancel={this.handleCancel.bind(this)}
-              okButtonProps={{ loading: modalLoading }}
-              afterClose={this.afterClose.bind(this)}
-            >
-              <Form layout="inline" ref={this.formRef}>
-                <Form.Item
-                  label="流程名称"
-                  name="name"
-                  rules={[{ required: true, message: '请输入流程名称' }]}
-                >
-                  <Input placeholder="请输入流程名称" />
-                </Form.Item>
-              </Form>
-            </Modal>
-          </div>
-        </Spin>
-        <div className="right-topology">
-          <div className="top-header">
-            <TemplateWrapper generator={() => this.generatorNodeData(1)}>
-              <div className="topology-templates-item">普通节点</div>
-            </TemplateWrapper>
-            <TemplateWrapper generator={() => this.generatorNodeData(2)}>
-              <div className="topology-templates-item">跳转节点</div>
-            </TemplateWrapper>
-          </div>
-          <div style={{ width: '100%', height: '700px', backgroundColor: '#f7f7f7' }}>
-            <Topology
-              data={data}
-              autoLayout
-              lineColor={mockLineColor}
-              onChange={this.onChange}
-              onSelect={this.handleSelect}
-              renderTreeNode={this.renderTreeNode}
-              readOnly={readonly}
-              showBar={showBar}
-              customPostionHeight={20}
-              canConnectMultiLines={canConnectMultiLines}
-              overlap={overlap}
-              overlapOffset={{
-                offsetX: 30,
-                offsetY: 30,
-              }}
-              getInstance={(ins: any) => {
-                this.topology = ins;
-              }}
+              <Sortable list={this.getList()} setList={this.setList.bind(this)} />
+              <Modal
+                title="新增流程节点"
+                open={isModalOpen}
+                onOk={this.handleOk.bind(this)}
+                onCancel={this.handleCancel.bind(this)}
+                okButtonProps={{ loading: modalLoading }}
+                afterClose={this.afterClose.bind(this)}
+              >
+                <Form layout="inline" ref={this.formRef}>
+                  <Form.Item
+                    label="流程名称"
+                    name="name"
+                    rules={[{ required: true, message: '请输入流程名称' }]}
+                  >
+                    <Input placeholder="请输入流程名称" />
+                  </Form.Item>
+                </Form>
+              </Modal>
+            </div>
+          </Spin>
+          <div className="right-topology">
+            <div className="top-header">
+              <TemplateWrapper generator={() => this.generatorNodeData(1)}>
+                <div className="topology-templates-item">普通节点</div>
+              </TemplateWrapper>
+              <TemplateWrapper generator={() => this.generatorNodeData(2)}>
+                <div className="topology-templates-item">跳转节点</div>
+              </TemplateWrapper>
+              <TemplateWrapper generator={() => this.generatorNodeData(3)}>
+                <div className="topology-templates-item">条件判断节点</div>
+              </TemplateWrapper>
+              <TemplateWrapper generator={() => this.generatorNodeData(4)}>
+                <div className="topology-templates-item">挂机</div>
+              </TemplateWrapper>
+            </div>
+            <div style={{ width: '100%', height: '100%', backgroundColor: '#f7f7f7' }}>
+              <Topology
+                data={data}
+                autoLayout
+                lineColor={mockLineColor}
+                onChange={this.onChange}
+                onSelect={this.handleSelect}
+                renderTreeNode={this.renderTreeNode}
+                readOnly={readonly}
+                showBar={showBar}
+                customPostionHeight={20}
+                canConnectMultiLines={canConnectMultiLines}
+                overlap={overlap}
+                overlapOffset={{
+                  offsetX: 30,
+                  offsetY: 30,
+                }}
+                getInstance={(ins: any) => {
+                  console.log(ins);
+                  this.topology = ins;
+                }}
+              />
+            </div>
+
+            <TalkDrawer
+              title="编辑普通流程"
+              open={openDrawer}
+              setOpen={this.setOpenDrawer.bind(this)}
             />
           </div>
         </div>
-      </div>
+      </Spin>
     );
   }
 }
 
-export default topologyWrapper(Flow);
+export default withRouter(topologyWrapper(Flow));

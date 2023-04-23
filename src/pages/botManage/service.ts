@@ -40,3 +40,24 @@ export async function updateTalkProcessById(data: any) {
     data,
   });
 }
+
+export async function saveTalkProcessById(data: any) {
+  return request('/salesTalk/saveInstTasks', {
+    method: 'POST',
+    data,
+  });
+}
+
+export async function getTalkProcessTaskById(data: any) {
+  return request('/salesTalk/getTasksByInstID', {
+    method: 'POST',
+    data,
+  });
+}
+
+export async function deleteTalkProcessById(data: any) {
+  return request('/salesTalk/deleteSalesTalkInst', {
+    method: 'POST',
+    data,
+  });
+}

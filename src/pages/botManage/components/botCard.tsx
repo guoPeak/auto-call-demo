@@ -22,7 +22,7 @@ const BotCard: React.FC = (props: any) => {
       extra={<Tag color="orange">{transformValToLabel(botItem.status, BOT_STATUS)}</Tag>}
       style={{ flex: 1, margin: '0 20px' }}
       actions={[
-        <SettingOutlined onClick={console.log('wewew')} key="setting" />,
+        <SettingOutlined key="setting" />,
         <EditOutlined key="edit" />,
         <EllipsisOutlined key="ellipsis" />,
       ]}

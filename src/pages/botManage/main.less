@@ -1,0 +1,53 @@
+.main-process-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 90px);
+  background: rgb(255, 255, 255);
+
+  .ant-pro-page-container-warp {
+    height: auto;
+  }
+
+  .ant-pro-grid-content {
+    flex: 1;
+    flex-grow: 1;
+    overflow: hidden;
+    > div {
+      height: 100%;
+      margin: 0;
+      > div {
+        height: 100%;
+        > div {
+          height: 100%;
+          > div {
+            height: 100%;
+          }
+        }
+      }
+    }
+  }
+
+  .ant-page-header-footer {
+    margin-top: 0;
+  }
+  .ant-page-header-content {
+    margin-top: 0;
+    padding-top: 0;
+  }
+  .ant-descriptions-header {
+    margin-bottom: 10px;
+  }
+
+  .ant-tabs-nav-wrap {
+    border-bottom: 1px solid #ccc;
+
+    .ant-tabs-tab-btn {
+      font-size: 14px;
+    }
+  }
+
+  .ant-pro-page-container-children-content {
+    margin: 0;
+    padding: 12px;
+  }
+}
