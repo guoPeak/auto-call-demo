@@ -1,6 +1,6 @@
 import { PlusOutlined } from '@ant-design/icons';
 import { Button, Descriptions, Input, Drawer, Form, Row, Col, Select, Tabs, Card } from 'antd';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 // import TopologyFlow from './topology';
 import { history, useParams } from 'umi';
 // import IntentTag from './intentTag';
@@ -28,8 +28,6 @@ const tabList = [
 
 const MainProcess: React.FC = (props: any) => {
   console.log('MainProcess', props);
-
-  const [pageLoading, setPageLoading] = useState<boolean>(false);
 
   const [botData, setBotData] = useState<any>({});
 
@@ -131,8 +129,6 @@ const MainProcess: React.FC = (props: any) => {
     );
   };
 
-  const saveProcess = () => {};
-
   return (
     // <Card
     //   style={{ width: '100%' }}
@@ -146,7 +142,6 @@ const MainProcess: React.FC = (props: any) => {
     //   {renderComponent()}
     // </Card>
     <PageContainer
-      loading={pageLoading}
       className="main-process-wrapper"
       content={renderContent()}
       title={false}
@@ -155,15 +150,15 @@ const MainProcess: React.FC = (props: any) => {
       tabProps={{ tabBarStyle: { fontSize: '12px', borderBottom: '1px soild #ccc' } }}
       tabActiveKey={getTabKey()}
       onTabChange={handleTabChange}
-      footer={
-        getTabKey() === 'topology'
-          ? [
-              <Button key="submit" type="primary" onClick={saveProcess}>
-                保存
-              </Button>,
-            ]
-          : []
-      }
+      // footer={
+      //     getTabKey() === 'topology'
+      //         ? [
+      //             <Button key="submit" type="primary" onClick={saveProcess}>
+      //                 保存
+      //             </Button>,
+      //         ]
+      //         : []
+      // }
     >
       {props.children}
       {/* {renderComponent()} */}

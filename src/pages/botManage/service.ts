@@ -20,6 +20,21 @@ export async function createBotTalk(data: any) {
   });
 }
 
+export async function deleteBotTalk(data: any) {
+  return request('/salesTalk/deleteSalesTalk', {
+    method: 'POST',
+    data,
+  });
+}
+
+export async function updateBotTalk(data: any) {
+  return request('/salesTalk/updateSalesTalk', {
+    method: 'POST',
+    data,
+  });
+}
+
+// 保存流程
 export async function saveTalkProcess(data: any) {
   return request('/salesTalk/saveSalesTalkInst', {
     method: 'POST',
@@ -34,7 +49,7 @@ export async function getTalkProcessById(data: any) {
   });
 }
 
-export async function updateTalkProcessById(data: any) {
+export async function updateTalkProcessSortById(data: any) {
   return request('/salesTalk/updateSalesTalkInstSort', {
     method: 'POST',
     data,
@@ -57,6 +72,14 @@ export async function getTalkProcessTaskById(data: any) {
 
 export async function deleteTalkProcessById(data: any) {
   return request('/salesTalk/deleteSalesTalkInst', {
+    method: 'POST',
+    data,
+  });
+}
+
+// 更新流程
+export async function updateTalkProcessById(data: any) {
+  return request('/salesTalk/updateSalesTalkInst', {
     method: 'POST',
     data,
   });
