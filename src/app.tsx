@@ -77,8 +77,8 @@ const requestInterceptor = (url: string, options: RequestConfig) => {
   console.log('requestInterceptor', REACT_APP_ENV);
   return {
     // url: defaultSettings.baseUrl + url, // 此处可以添加域名前缀
-    // url: '/api' + url,
-    url,
+    url: REACT_APP_ENV === 'dev' ? url : '/api' + url,
+    // url,
     options: {
       ...options,
       headers: {

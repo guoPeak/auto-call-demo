@@ -1,9 +1,9 @@
-import { PlusOutlined } from '@ant-design/icons';
+import { PlusOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import { Button, Modal, Input, Form, Row, Col, Select, Card } from 'antd';
 import React, { useState, useEffect } from 'react';
 // import { PageContainer, FooterToolbar } from '@ant-design/pro-layout';
 import BotCard from './components/botCard';
-import { getBotList, createBotTalk } from './service';
+import { getBotList, createBotTalk, deleteBotTalk, updateBotTalk } from './service';
 import { history } from 'umi';
 import {
   BOT_STATUS as botStatus,
@@ -12,6 +12,8 @@ import {
 } from '@/config/dict';
 
 import './bot.less';
+
+let editId: any = null;
 
 const TableList: React.FC = () => {
   const [buttonLoading, setButtonLoading] = useState<boolean>(false);
@@ -37,7 +39,16 @@ const TableList: React.FC = () => {
     submitForm.validateFields().then(async (data) => {
       setmodalLoading(true);
       console.log(data);
-      await createBotTalk(data);
+      if (editId) {
+        await updateBotTalk({
+          ...data,
+          id: editId,
+        }).then(() => {
+          getList(serchForm.getFieldsValue());
+        });
+      } else {
+        await createBotTalk(data);
+      }
       setmodalLoading(false);
       setIsModalOpen(false);
     });
@@ -78,6 +89,29 @@ const TableList: React.FC = () => {
 
   const handleReset = () => {
     serchForm.resetFields();
+  };
+
+  const editBot = (botItem: any) => {
+    editId = botItem.id;
+    submitForm.setFieldsValue(botItem);
+    newBot();
+  };
+
+  const copyBot = () => {};
+
+  const deleteBot = ({ id }) => {
+    Modal.confirm({
+      title: '删除',
+      icon: <ExclamationCircleOutlined />,
+      content: '确定将当前口令从尴尬口令列表删除？',
+      okText: '确认',
+      cancelText: '取消',
+      onOk: () => {
+        return deleteBotTalk({ id }).then(() => {
+          getList(serchForm.getFieldsValue());
+        });
+      },
+    });
   };
 
   return (
@@ -130,7 +164,13 @@ const TableList: React.FC = () => {
         {list.map((item) => {
           return (
             <Col className="card-wrapper" span={8} key={item.id}>
-              <BotCard value={item} cardClick={cardClick} />
+              <BotCard
+                value={item}
+                cardClick={cardClick}
+                editBot={editBot}
+                copyBot={copyBot}
+                deleteBot={deleteBot}
+              />
             </Col>
           );
         })}
@@ -139,11 +179,15 @@ const TableList: React.FC = () => {
       {/* </div> */}
 
       <Modal
-        title="新建"
+        title={editId ? '编辑' : '新建'}
         open={isModalOpen}
         onOk={handleOk}
         onCancel={handleCancel}
         okButtonProps={{ loading: modalLoading }}
+        afterClose={() => {
+          submitForm.resetFields();
+          editId = null;
+        }}
       >
         <Form form={submitForm} labelCol={{ span: 4 }}>
           <Form.Item
@@ -164,7 +208,7 @@ const TableList: React.FC = () => {
               })}
             </Select>
           </Form.Item>
-          <Form.Item label="Bot范围" name="botDesc">
+          <Form.Item label="Bot描述" name="botDesc">
             <Input.TextArea rows={2} placeholder="请输入" />
           </Form.Item>
         </Form>
