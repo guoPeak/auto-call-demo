@@ -1,14 +1,22 @@
 @import '~antd/es/style/variable.less';
 
+.topology-spin {
+  height: 100%;
+
+  .ant-spin-nested-loading, .ant-spin-container {
+    height: 100%;
+  }
+}
+
 .topology {
   position: relative;
   display: flex;
   width: 100%;
   height: 100%;
   padding-top: 8px;
-  padding-right: 12px;
+  // padding-right: 12px;
   padding-bottom: 40px;
-  padding-left: 12px;
+  // padding-left: 12px;
   background-color: #fff;
 
   .left-topology {
@@ -76,7 +84,14 @@
     padding: 10px;
     // text-align: center;
     border: 1px solid #ccc;
-    cursor: pointer;
+    // cursor: pointer;
+
+    .left-arrow {
+      position: absolute;
+      bottom: 5px;
+      left: 10px;
+      background-color: #f7f7f7;
+    }
 
     .edit-icon {
       position: absolute;
@@ -110,7 +125,7 @@
   }
   .flow-node-branches-wrapper {
     display: flex;
-    justify-content: space-around;
+    justify-content: flex-start;
     min-width: 200px;
     margin-top: 10px;
     .flow-node-branch {

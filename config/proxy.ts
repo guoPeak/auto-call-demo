@@ -28,6 +28,11 @@ export default {
         pathRewrite: { '': '' },
     },
 
+    '/audit/': {
+        target: 'http://124.221.115.161:8661',
+        changeOrigin: true,
+        pathRewrite: { '': '' },
+    },
 
   },
 //   test: {

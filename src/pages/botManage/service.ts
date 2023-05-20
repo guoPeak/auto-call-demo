@@ -13,6 +13,15 @@ export async function getBotList(data?: Record<string, any>) {
   });
 }
 
+
+// 送审
+export async function applyAudit(data?: Record<string, any>) {
+  return request('/audit/applyAudit', {
+    method: 'POST',
+    data: data,
+  });
+}
+
 export async function createBotTalk(data: any) {
   return request('/salesTalk/createSalesTalk', {
     method: 'POST',

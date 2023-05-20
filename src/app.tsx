@@ -7,6 +7,8 @@ import type { RunTimeLayoutConfig } from 'umi';
 // import { BookOutlined, LinkOutlined } from '@ant-design/icons';
 import defaultSettings from '../config/defaultSettings';
 import type { RequestConfig } from 'umi';
+import { message } from 'antd';
+
 
 // const isDev = process.env.NODE_ENV === 'development';
 
@@ -94,6 +96,8 @@ const responseInterceptor = async (response: Response) => {
   console.log('返回了======', data);
   if (data.code === 200 && data.success) {
     return data.data;
+  } else {
+    message.error(data.message);
   }
 };
 

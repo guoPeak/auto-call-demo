@@ -3,7 +3,7 @@ import { Button, Modal, Input, Form, Row, Col, Select, Card } from 'antd';
 import React, { useState, useEffect } from 'react';
 // import { PageContainer, FooterToolbar } from '@ant-design/pro-layout';
 import BotCard from './components/botCard';
-import { getBotList, createBotTalk, deleteBotTalk, updateBotTalk } from './service';
+import { getBotList, createBotTalk, deleteBotTalk, updateBotTalk, applyAudit } from './service';
 import { history } from 'umi';
 import {
   BOT_STATUS as botStatus,
@@ -99,6 +99,25 @@ const TableList: React.FC = () => {
 
   const copyBot = () => {};
 
+  const handleApproval = (botItem: any) => {
+    Modal.confirm({
+      title: '送审',
+      icon: <ExclamationCircleOutlined />,
+      content: '确定将该话术送审吗？',
+      okText: '确认',
+      cancelText: '取消',
+      onOk: () => {
+        return applyAudit({
+          businessId: botItem.id,
+          type: 1
+        }).then(() => {
+          getList(serchForm.getFieldsValue());
+        });
+      },
+    });
+    
+  }
+
   const deleteBot = ({ id }) => {
     Modal.confirm({
       title: '删除',
@@ -121,7 +140,7 @@ const TableList: React.FC = () => {
           <Input placeholder="请输入Bot名称和Id" />
         </Form.Item>
         <Form.Item label="Bot状态" name="status">
-          <Select placeholder="请选择Bot状态" allowClear>
+          <Select placeholder="请选择Bot状态" allowClear style={{width: '200px'}}>
             {botStatus.map((item) => {
               return (
                 <Select.Option key={item.value} value={item.value}>
@@ -132,7 +151,7 @@ const TableList: React.FC = () => {
           </Select>
         </Form.Item>
         <Form.Item label="Bot范围" name="botRange">
-          <Select placeholder="请选择Bot范围" allowClear>
+          <Select placeholder="请选择Bot范围" allowClear style={{width: '200px'}}>
             {BotRanage.map((item) => {
               return (
                 <Select.Option key={item.value} value={item.value}>
@@ -170,6 +189,7 @@ const TableList: React.FC = () => {
                 editBot={editBot}
                 copyBot={copyBot}
                 deleteBot={deleteBot}
+                approval={handleApproval}
               />
             </Col>
           );

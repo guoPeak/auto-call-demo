@@ -1,0 +1,43 @@
+.bot-item {
+  margin: 0 20px;
+  // padding: 20px 0 20px 20px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+
+  display: flex;
+
+  .card-left {
+    flex: 1;
+    overflow: hidden;
+
+    .bot-status {
+      margin-left: 8px;
+      .dot {
+        display: inline-block;
+        vertical-align: middle;
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        margin-right: 8px;
+        background-color: orange;
+      }
+    }
+  }
+
+  .card-right {
+    width: 80px;
+    display: flex;
+    flex-direction: column;
+    border-left: 1px solid rgba(0, 0, 0, 0.06);
+
+    .card-icon {
+      width: 100%;
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+      font-size: 24px;
+      color: #aaa;
+    }
+  }
+}

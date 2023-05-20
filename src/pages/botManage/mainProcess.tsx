@@ -160,7 +160,12 @@ const MainProcess: React.FC = (props: any) => {
       //         : []
       // }
     >
-      {props.children}
+      {/* {props.children} */}
+      {
+        React.Children.map(props.children, child => {
+            return React.cloneElement(child, {botData: botData})
+        })
+    }
       {/* {renderComponent()} */}
     </PageContainer>
   );
