@@ -737,10 +737,10 @@ class Flow extends React.Component<any, FlowState> {
                                     offsetX: 30,
                                     offsetY: 30,
                                 }}
-                                getInstance={(ins: any) => {
-                                    console.log('getInstance ===>', ins);
-                                    this.topology = ins;
-                                }}
+                                // getInstance={(ins: any) => {
+                                //     console.log('getInstance ===>', ins);
+                                //     this.topology = ins;
+                                // }}
                             />
                         </div>
 

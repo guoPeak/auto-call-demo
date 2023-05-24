@@ -21,6 +21,14 @@ const tabList = [
     tab: '意向标签',
   },
   {
+    key: 'record',
+    tab: '录音',
+  },
+  {
+    key: 'review',
+    tab: '审核',
+  },
+  {
     key: 'botSetting',
     tab: 'Bot设置',
   },
@@ -76,6 +84,12 @@ const MainProcess: React.FC = (props: any) => {
         break;
       case 'botSetting':
         history.push(`${url}/${id}/botSetting`);
+        break;
+      case 'record':
+        history.push(`${url}/${id}/record`);
+        break;
+      case 'review':
+        history.push(`${url}/${id}/review`);
         break;
       default:
         break;
@@ -150,15 +164,6 @@ const MainProcess: React.FC = (props: any) => {
       tabProps={{ tabBarStyle: { fontSize: '12px', borderBottom: '1px soild #ccc' } }}
       tabActiveKey={getTabKey()}
       onTabChange={handleTabChange}
-      // footer={
-      //     getTabKey() === 'topology'
-      //         ? [
-      //             <Button key="submit" type="primary" onClick={saveProcess}>
-      //                 保存
-      //             </Button>,
-      //         ]
-      //         : []
-      // }
     >
       {/* {props.children} */}
       {

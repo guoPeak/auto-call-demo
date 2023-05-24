@@ -61,8 +61,8 @@ const BotSetting: React.FC = ({ botData = {} }) => {
       <Form.Item label="语言识别灵敏度" name="languageSensitivity">
           <Input placeholder="请输入语言识别灵敏度" />
       </Form.Item>
-      <Form.Item label="意向标签" name="tags" initialValue={false}>
-            <Switch />
+      <Form.Item label="意向标签" name="tags">
+          <Switch />
       </Form.Item>
       <Form.Item>
           <Button
