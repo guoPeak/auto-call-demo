@@ -75,3 +75,10 @@ export const INTENT_TAG: labelType[] = [
     value: 5,
   },
 ]
+
+export const RECORD_METHOD: labelType[] = [
+  {
+    label: '真人录音',
+    value: 1,
+  },
+]

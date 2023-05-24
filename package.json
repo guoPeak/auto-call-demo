@@ -83,7 +83,8 @@
     "react-sortable-hoc": "^2.0.0",
     "sortablejs": "^1.15.0",
     "umi": "^3.5.0",
-    "umi-serve": "^1.9.10"
+    "umi-serve": "^1.9.10",
+    "voice-recorder-react": "^1.1.1"
   },
   "devDependencies": {
     "@ant-design/pro-cli": "^2.1.0",

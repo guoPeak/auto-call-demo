@@ -59,7 +59,7 @@ const IntentTag: React.FC = () => {
       dataIndex: 'options',
       key: 'options',
       render: (txt, record) => {
-        return  <Button onClick={() => editRule(record)} type='text' style={{color: '#1B1E83'}}>编辑</Button>
+        return  <Button onClick={() => editRule(record)} type='link'>编辑</Button>
       }
     }
   ];
