@@ -23,17 +23,34 @@ const TableList: React.FC = () => {
 
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
+  const [totalPage, setTotalPage] = useState<number>(1)
+  const [currentPage, setCurrentPage] = useState<number>(1)
+
   const [serchForm] = Form.useForm();
   const [submitForm] = Form.useForm();
 
   const getList = async (obj: any) => {
     const res = await getBotList({
-      pageNo: 1,
+      pageNo: currentPage,
       pageSize: 20,
       ...obj,
     });
-    setList(res.list);
+    console.log('getList =======>', currentPage);
+    let newList = []
+    if (currentPage > 1) {
+      newList = [...list, ...res.list]
+    } else {
+      newList = [...res.list]
+    }
+    setTotalPage(res.totalPage)
+    setList(newList);
   };
+
+  const loadMore = () => {
+    const page = currentPage + 1
+    setCurrentPage(page)
+    getList(serchForm.getFieldsValue())
+  }
 
   const handleOk = () => {
     submitForm.validateFields().then(async (data) => {
@@ -196,6 +213,8 @@ const TableList: React.FC = () => {
         })}
       </Row>
 
+
+      {totalPage > currentPage ? <div style={{marginTop: 20, textAlign: 'center'}}><Button onClick={loadMore}>加载更多</Button></div>: null}
       {/* </div> */}
 
       <Modal
