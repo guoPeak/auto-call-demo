@@ -34,6 +34,12 @@ export default {
         pathRewrite: { '': '' },
     },
 
+    '/auth/': {
+      target: 'http://47.101.146.200:8663',
+      changeOrigin: true,
+      pathRewrite: { '': '' },
+  },
+
   },
 //   test: {
 //     '/branch/getDefaultBranch': {

@@ -2,15 +2,24 @@
 // import { SettingDrawer } from '@ant-design/pro-layout';
 // import { PageLoading } from '@ant-design/pro-layout';
 import type { RunTimeLayoutConfig } from 'umi';
-// import RightContent from '@/components/RightContent';
+import RightContent from '@/components/RightContent';
 // import Footer from '@/components/Footer';
 // import { BookOutlined, LinkOutlined } from '@ant-design/icons';
 import defaultSettings from '../config/defaultSettings';
+import { ConfigProvider } from 'antd';
 import type { RequestConfig } from 'umi';
 import { message } from 'antd';
+import { history } from 'umi';
+// import { queryCurrentUser } from './services/user';
+import { getToken, removeToken } from '@/utils/token';
+
+
 
 
 // const isDev = process.env.NODE_ENV === 'development';
+
+const loginPath = '/login';
+
 
 /** 获取用户信息比较慢的时候会展示一个 loading */
 // export const initialStateConfig = {
@@ -29,7 +38,15 @@ import { message } from 'antd';
 //     };
 // }
 
-import { ConfigProvider } from 'antd';
+export async function getInitialState() {
+    const token = await getToken();
+    return {
+      getToken,
+      token,
+      settings: defaultSettings,
+    };
+}
+
 
 ConfigProvider.config({
   theme: {
@@ -40,11 +57,20 @@ ConfigProvider.config({
 // ProLayout 支持的api https://procomponents.ant.design/components/layout
 export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) => {
   return {
-    // rightContentRender: () => <RightContent />,
+    rightContentRender: () => <RightContent />,
     disableContentMargin: false,
 
     // footerRender: () => <Footer />,
-    onPageChange: () => {},
+    onPageChange: () => {
+      const { location } = history;
+      // 如果没有登录，重定向到 login
+      console.log('onPageChange   ===>', initialState, location);
+      if (!initialState?.token && location.pathname !== loginPath) {
+        history.push(loginPath);
+      } else if (initialState?.token && location.pathname === loginPath) { // 已登录到登录页面，重到首页
+        history.replace('/');
+      }
+    },
     menuHeaderRender: undefined,
     // 自定义 403 页面
     // unAccessible: <div>unAccessible</div>,
@@ -85,6 +111,7 @@ const requestInterceptor = (url: string, options: RequestConfig) => {
       ...options,
       headers: {
         // authorization: 'Bearer',
+        token: getToken()
       },
     },
   };
@@ -96,8 +123,12 @@ const responseInterceptor = async (response: Response) => {
   console.log('返回了======', data);
   if (data.code === 200 && data.success) {
     return data.data;
+  } else if (data.code === 401) { // 登录失效，移除token
+    removeToken()
+    history.push(loginPath);
   } else {
     message.error(data.message);
+    return data
   }
 };
 
