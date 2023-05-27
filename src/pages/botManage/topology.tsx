@@ -231,8 +231,15 @@ class Flow extends React.Component<any, FlowState> {
             // branchIds = '',
             // nextActionTxt,
             nextAction,
+            nextTaskId,
             branches
         } = data;
+        let nextActionName = ''
+        if (nextTaskId) {
+          nextActionName = this.state.leftProcess?.find(item => item.id === nextTaskId)?.name || ''
+        } else if (nextAction) {
+          nextActionName = nextActionMap[nextAction]
+        }
         // const branchNamesArr = branchNames.split(',');
         // const branchIdsArr = branchIds.split(',');
         const newBranches = branches?.map((item) => ({ ...item })) || [];
@@ -260,7 +267,7 @@ class Flow extends React.Component<any, FlowState> {
                     </div>
                 ) : null}
                 {nextAction && type == 2 ? (
-                    <div className="next-step">下一步：{nextActionMap[nextAction]}</div>
+                    <div className="next-step">下一步：{nextActionName}</div>
                 ) : null}
             </div>
         );
@@ -601,7 +608,7 @@ class Flow extends React.Component<any, FlowState> {
                   position: item.position,
               },
           };
-          item.branches.forEach((branch: any) => {
+          item.branches?.length > 0 && item.branches.forEach((branch: any) => {
             const hasLine = nodeLines.findIndex(e => e.taskCanvasId == item.id && e.startNodeBranchId == branch.name )
             // console.log('item.branches.forEach ===>', item.id, hasLine, nodeLines, branch);
             if (hasLine > -1) {
@@ -747,6 +754,7 @@ class Flow extends React.Component<any, FlowState> {
                         {openDrawer && <TalkDrawer
                             open={true}
                             data={drawerData}
+                            allTalk={leftProcess}
                             save={this.saveNodeData.bind(this)}
                             setOpen={this.setOpenDrawer.bind(this)}
                         />}

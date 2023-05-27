@@ -20,6 +20,7 @@ import { login } from '@/services/user';
 import { setToken } from '@/utils/token';
 import { history } from 'umi';
 import md5 from 'js-md5'
+import loginImg from '@/assets/login-bg.png';
 
 
 const Login: React.FC = () => {
@@ -48,13 +49,16 @@ const Login: React.FC = () => {
     <div
       style={{
         backgroundColor: 'white',
-        height: 'calc(100vh - 48px)',
+        // height: 'calc(100vh - 48px)',
+        height: '100vh',
         // margin: -24,
       }}
     >
       <LoginFormPage
         onFinish={handleSubmit}
-        backgroundImageUrl="https://gw.alipayobjects.com/zos/rmsportal/FfdJeJRQWjEeGTpqgBKj.png"
+        // backgroundImageUrl="https://gw.alipayobjects.com/zos/rmsportal/FfdJeJRQWjEeGTpqgBKj.png"
+        backgroundImageUrl={loginImg}
+        style={{backgroundSize: 'contain'}}
         // logo="https://github.githubassets.com/images/modules/logos_page/Octocat.png"
         title="恰音科技"
         subTitle=" "
@@ -64,22 +68,10 @@ const Login: React.FC = () => {
         //     color: '#fff',
         //     borderRadius: 8,
         //     backgroundColor: '#1677FF',
+        //     backgroundImage: 'url("/static/login-bg.52ffc8ab.png")',
         //   },
         //   title: '活动标题，可配置图片',
         //   subTitle: '活动介绍说明文字',
-        //   action: (
-        //     <Button
-        //       size="large"
-        //       style={{
-        //         borderRadius: 20,
-        //         background: '#fff',
-        //         color: '#1677FF',
-        //         width: 120,
-        //       }}
-        //     >
-        //       去看看
-        //     </Button>
-        //   ),
         // }}
         // actions={
         //   <div

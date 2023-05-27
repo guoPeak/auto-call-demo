@@ -5,6 +5,7 @@ import type { RadioChangeEvent } from 'antd';
 import BranchInput from './branchInput';
 import ExtraSetting from './extraSetting';
 import { INTENT_TAG } from '@/config/dict';
+import NextStep from './nextStep';
 
 
 const normalFormList = ({ onChange, onClick, branches, data: {tagIds, isIntercept, recall, repeatCount } }) => [
@@ -57,7 +58,7 @@ const normalFormList = ({ onChange, onClick, branches, data: {tagIds, isIntercep
   },
 ];
 
-const jumpFormList = ({ onChange, onClick, data }) => [
+const jumpFormList = ({ onChange, onClick, data, allTalk }) => [
     {
         label: '流程名称',
         name: 'name',
@@ -65,16 +66,30 @@ const jumpFormList = ({ onChange, onClick, data }) => [
         children: <Input placeholder="请输入流程名称" onChange={(val) => onChange(val, 'name')} />,
     },
     {
+      label: '流程话术',
+      name: 'talk',
+      rule: [],
+      children: (
+          <Input.TextArea placeholder="请输入流程话术" onChange={(val) => onChange(val, 'talk')} />
+      ),
+    },
+    {
         label: '下一步',
         name: 'nextAction',
         rule: [],
-        children: (
-            <Select defaultValue="next" onChange={(val) => onChange(val, 'nextAction')}>
-                <Select.Option value="hangup">挂机</Select.Option>
-                <Select.Option value="next">下一步主动流程</Select.Option>
-                <Select.Option value="assign">指定主动流程</Select.Option>
-            </Select>
-        ),
+        // children: (
+        //   <>
+        //     <Select defaultValue="next" onChange={(val) => onChange(val, 'nextAction')}>
+        //         <Select.Option value="hangup">挂机</Select.Option>
+        //         <Select.Option value="next">下一步主动流程</Select.Option>
+        //         <Select.Option value="assign">指定主动流程</Select.Option>
+        //     </Select>
+        //     <Select defaultValue="next" options={} onChange={(val) => onChange(val, 'nextAction')}>
+            
+        //     </Select>
+        // </>
+        // ),
+        children: <NextStep onChange={(val) => onChange(val, 'nextAction')} allTalk={allTalk} data={data} />
     },
     {
         label: '分值',
@@ -190,7 +205,7 @@ const getCurrentFormList = (key: number, props: any) => {
 };
 
 const TalkDrawer: React.FC = (props: any) => {
-    const { open, setOpen, data, save } = props;
+    const { open, setOpen, data, save, allTalk } = props;
 
     const title = nodeNameMap[data.type];
 
@@ -211,7 +226,8 @@ const TalkDrawer: React.FC = (props: any) => {
             console.log('branches onChange ===>', branchIds, branchNames);
             setBranches(val)
         } else if (key === 'nextAction') {
-            data[key] = val;
+          data[key] = val.type;
+          data.nextTaskId = val.value
         } else if (key === 'extraSetting') {
           data.isIntercept = val.isIntercept
           data.recall = val.recall
@@ -239,7 +255,7 @@ const TalkDrawer: React.FC = (props: any) => {
     };
 
 
-    const currentFormList = getCurrentFormList(data.type, { onChange, onClick, data, branches });
+    const currentFormList = getCurrentFormList(data.type, { onChange, onClick, data, branches, allTalk });
 
     const [form] = Form.useForm();
 
