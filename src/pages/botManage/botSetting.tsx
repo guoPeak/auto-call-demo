@@ -15,7 +15,7 @@ const BotSetting: React.FC = ({ botData = {} }) => {
         ...botData,
         botDesc,
         priority, languageSensitivity, tags,
-        id: botData.id,
+        botId: botData.botId,
       }).then(() => {
       
       });

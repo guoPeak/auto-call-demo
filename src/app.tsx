@@ -9,16 +9,16 @@ import defaultSettings from '../config/defaultSettings';
 import { ConfigProvider } from 'antd';
 import type { RequestConfig } from 'umi';
 import { message } from 'antd';
-import { history } from 'umi';
+// import { history } from 'umi';
 // import { queryCurrentUser } from './services/user';
-import { getToken, removeToken } from '@/utils/token';
+// import { getToken, removeToken } from '@/utils/token';
 
 
 
 
 // const isDev = process.env.NODE_ENV === 'development';
 
-const loginPath = '/login';
+// const loginPath = '/login';
 
 
 /** 获取用户信息比较慢的时候会展示一个 loading */
@@ -39,10 +39,10 @@ const loginPath = '/login';
 // }
 
 export async function getInitialState() {
-    const token = await getToken();
+    // const token = await getToken();
     return {
-      getToken,
-      token,
+      // getToken,
+      // token,
       settings: defaultSettings,
     };
 }
@@ -62,14 +62,14 @@ export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) =
 
     // footerRender: () => <Footer />,
     onPageChange: () => {
-      const { location } = history;
-      // 如果没有登录，重定向到 login
-      console.log('onPageChange   ===>', initialState, location);
-      if (!initialState?.token && location.pathname !== loginPath) {
-        history.push(loginPath);
-      } else if (initialState?.token && location.pathname === loginPath) { // 已登录到登录页面，重到首页
-        history.replace('/');
-      }
+      // const { location } = history;
+      // // 如果没有登录，重定向到 login
+      // console.log('onPageChange   ===>', initialState, location);
+      // if (!initialState?.token && location.pathname !== loginPath) {
+      //   history.push(loginPath);
+      // } else if (initialState?.token && location.pathname === loginPath) { // 已登录到登录页面，重到首页
+      //   history.replace('/');
+      // }
     },
     menuHeaderRender: undefined,
     // 自定义 403 页面
@@ -103,15 +103,18 @@ export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) =
 // 全局请求
 const requestInterceptor = (url: string, options: RequestConfig) => {
   console.log('requestInterceptor', REACT_APP_ENV);
+  //  REACT_APP_ENV === 'dev' ? url : 
+  // const neWurl =url.includes('auth') ? '/api' + url : '/api/service' + url
   return {
     // url: defaultSettings.baseUrl + url, // 此处可以添加域名前缀
-    url: REACT_APP_ENV === 'dev' ? url : '/api' + url,
+    url: url,
     // url,
     options: {
       ...options,
       headers: {
         // authorization: 'Bearer',
-        token: getToken()
+        client_type: 1,
+        // token: getToken()
       },
     },
   };
@@ -121,32 +124,37 @@ const requestInterceptor = (url: string, options: RequestConfig) => {
 const responseInterceptor = async (response: Response) => {
   const data = await response.clone().json();
   console.log('返回了======', data);
-  if (data.code === 200 && data.success) {
-    return data.data;
+  if (data.code === 0) {
+    return data?.data;
   } else if (data.code === 401) { // 登录失效，移除token
-    removeToken()
-    history.push(loginPath);
+    // removeToken()
+    // history.push(loginPath);
+    message.error('登录失效');
   } else {
-    message.error(data.message);
-    return data
+    message.error(data.message || '系统错误');
+    return null
   }
 };
 
-const errorHandler = (error: any) => {
-  const { response } = error;
-  if (response && response.status) {
-    const { status, url } = response;
-    console.log(`请求错误 ${status}: ${url}`);
-  }
-  throw error;
-};
+// const errorHandler = (error: any) => {
+//   const { response } = error;
+//   if (response && response.status) {
+//     const { status, url } = response;
+//     console.log(`请求错误 ${status}: ${url}`);
+//   }
+//   throw error;
+// };
 
 export const request: RequestConfig = {
   timeout: 10000,
-  errorConfig: {},
+  errorConfig: {
+    adaptor: (resData: any, ctx: any) => {
+      return {}
+    }
+  },
   middlewares: [],
   // 异常处理
-  errorHandler,
+  // errorHandler,
   requestInterceptors: [requestInterceptor],
   responseInterceptors: [responseInterceptor],
 };

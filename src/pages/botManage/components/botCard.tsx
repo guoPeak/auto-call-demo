@@ -45,8 +45,8 @@ const BotCard: React.FC = (props: any) => {
         extra={<span className='bot-status'><span className="dot" />{transformValToLabel(botItem.status, BOT_STATUS)}</span>}
         className='card-left'
       >
-        <p>BotID：{botItem.id}</p>
-        <p>行业：{transformValToLabel(botItem.trade, INDUSTRY)}</p>
+        <p>BotID：{botItem.botId}</p>
+        <p>行业：{transformValToLabel(botItem.industryCode, INDUSTRY)}</p>
         <p>录音方式：{botItem.RecordMethod}</p>
         <p>录音师：{botItem.infromant}</p>
         <p>更新时间：{moment(botItem.updateTime).format('YYYY-MM-DD HH:mm:ss')}</p>

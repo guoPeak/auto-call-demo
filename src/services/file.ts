@@ -2,7 +2,7 @@ import { request } from 'umi';
 
 // 上传文件
 export async function uploadFile (data) {
-  return request('/file/upload', {
+  return request('/sales/talk/bot/voice/upload', {
     method: 'POST',
     data,
   });

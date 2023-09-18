@@ -38,11 +38,11 @@ const TableList: React.FC = () => {
     console.log('getList =======>', currentPage);
     let newList = []
     if (currentPage > 1) {
-      newList = [...list, ...res.list]
+      newList = [...list, ...res.rows]
     } else {
-      newList = [...res.list]
+      newList = [...res.rows]
     }
-    setTotalPage(res.totalPage)
+    setTotalPage(res.total)
     setList(newList);
   };
 
@@ -59,7 +59,7 @@ const TableList: React.FC = () => {
       if (editId) {
         await updateBotTalk({
           ...data,
-          id: editId,
+          botId: editId,
         }).then(() => {
           getList(serchForm.getFieldsValue());
         });
@@ -90,7 +90,7 @@ const TableList: React.FC = () => {
   const cardClick = (card: any) => {
     console.log('cardClick', card);
     history.push({
-      pathname: `/process/${card.id}`,
+      pathname: `/process/${card.botId}`,
       // query: {
       //     id: card.id,
       // },
@@ -109,7 +109,7 @@ const TableList: React.FC = () => {
   };
 
   const editBot = (botItem: any) => {
-    editId = botItem.id;
+    editId = botItem.botId;
     submitForm.setFieldsValue(botItem);
     newBot();
   };
@@ -125,7 +125,7 @@ const TableList: React.FC = () => {
       cancelText: '取消',
       onOk: () => {
         return applyAudit({
-          businessId: botItem.id,
+          businessId: botItem.botId,
           type: 1
         }).then(() => {
           getList(serchForm.getFieldsValue());
@@ -135,7 +135,7 @@ const TableList: React.FC = () => {
     
   }
 
-  const deleteBot = ({ id }) => {
+  const deleteBot = ({ botId }) => {
     Modal.confirm({
       title: '删除',
       icon: <ExclamationCircleOutlined />,
@@ -143,7 +143,7 @@ const TableList: React.FC = () => {
       okText: '确认',
       cancelText: '取消',
       onOk: () => {
-        return deleteBotTalk({ id }).then(() => {
+        return deleteBotTalk({ botId }).then(() => {
           getList(serchForm.getFieldsValue());
         });
       },
@@ -199,7 +199,7 @@ const TableList: React.FC = () => {
       <Row gutter={24}>
         {list.map((item) => {
           return (
-            <Col className="card-wrapper" span={8} key={item.id}>
+            <Col className="card-wrapper" span={8} key={item.botId}>
               <BotCard
                 value={item}
                 cardClick={cardClick}

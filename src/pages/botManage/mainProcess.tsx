@@ -99,9 +99,12 @@ const MainProcess: React.FC = (props: any) => {
   const getBotData = async () => {
     const { id } = getMatchUrl();
     const res = await getBotList({
-      id: id,
+      botId: id,
     });
-    setBotData(res.list[0]);
+    const data = res.rows[0] || {}
+    data.id = data.botId
+    debugger
+    setBotData(data);
   };
 
   useEffect(() => {

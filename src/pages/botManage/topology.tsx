@@ -143,7 +143,7 @@ class Flow extends React.Component<any, FlowState> {
     };
 
     getNameByType = (type: number) => {
-        this.state.branchConfig?.find((item) => item.type === type);
+        this.state.branchConfig?.find((item) => item.type == type);
     };
 
     generatorNodeData = (type: number) => {
@@ -166,7 +166,7 @@ class Flow extends React.Component<any, FlowState> {
             sendMsg: 1,
             msgTemplateId: 26,
         };
-        if (type === 1) {
+        if (type == 1) {
             const { branchConfig } = this.state;
             // const branchIds = branchConfig?.map((item) => item.id).join(',');
             // const branchNames = branchConfig?.map((item) => item.name).join(',');
@@ -176,15 +176,17 @@ class Flow extends React.Component<any, FlowState> {
               return {
                 ...item,
                 selected: 1,
-                satrt: `${obj.id}-${item.name}`,
+                start: `${obj.id}-${item.type}`,
                 end: '',
-                id: i + 1
+                startNodeBranchId: item.id
+                // id: id
               }
             })
-        } else if (type === 2) {
+        } else if (type == 2) {
             obj.nextActionTxt = '执行下一步';
             obj.nextAction = 'next';
-        } else if (type === 3) {
+            obj.nextTaskId = ''
+        } else if (type == 3) {
             obj.branchNames = '默认';
             obj.branchIds = '1';
         }
@@ -200,19 +202,24 @@ class Flow extends React.Component<any, FlowState> {
         this.setState({
             containerLoading: true,
         });
-        const list = await getTalkProcessById({
-            id: this.talkId,
-        });
-        list.sort((a, b) => a.sort - b.sort); // 排序
-        list.forEach((item: any, index: number) => {
-            item.selected = !index;
-        });
-        this.processId = list[0]?.id;
+        let list = []
+        try {
+            list = await getTalkProcessById({
+                botId: this.talkId,
+            });
+            list.sort((a, b) => a.sort - b.sort); // 排序
+            list.forEach((item: any, index: number) => {
+                item.selected = !index;
+            });
+            this.processId = list[0]?.instId;
+        } catch (error) {
+            
+        }
         this.setState({
             leftProcess: list,
             containerLoading: false,
         });
-        this.processId && (await this.handleTalkClick({id: this.processId}));
+        this.processId && (await this.handleTalkClick({instId: this.processId}));
     }
 
     async componentDidMount() {
@@ -236,25 +243,24 @@ class Flow extends React.Component<any, FlowState> {
         } = data;
         let nextActionName = ''
         if (nextTaskId) {
-          nextActionName = this.state.leftProcess?.find(item => item.id === nextTaskId)?.name || ''
+          nextActionName = this.state.leftProcess?.find(item => item.instId === nextTaskId)?.name || ''
         } else if (nextAction) {
           nextActionName = nextActionMap[nextAction]
         }
         // const branchNamesArr = branchNames.split(',');
         // const branchIdsArr = branchIds.split(',');
         const newBranches = branches?.map((item) => ({ ...item })) || [];
-
         return (
             <div className="topology-node" onDoubleClick={() => this.setOpenDrawer(true, data)}>
                 <div className="node-header">{name}</div>
                 {talk ? <p className="node-content">{talk}</p> : null}
                 {newBranches?.length > 0 ? (
                     <div className="flow-node-branches-wrapper">
-                        {branches.map((item: any) => {
+                        {newBranches.map((item: any) => {
                           if (!item.selected) return null
                             const itemColor = rondomTagColor[item.name] || rondomTagColor['默认'];
                             return anchorDecorator({
-                                anchorId: `${item.name}`,
+                                anchorId: `${item.startNodeBranchId}`,
                             })(
                                 <span
                                     className="flow-node-branch"
@@ -305,12 +311,12 @@ class Flow extends React.Component<any, FlowState> {
         // await this.getTalkProcess();
     }
 
-    handleTalkClick({ selected, id }: any) {
+    handleTalkClick({ selected, instId }: any) {
         if (selected) return
-        this.processId = id;
+        this.processId = instId;
         const list = this.state.leftProcess;
         list?.forEach((item: any) => {
-            item.selected = item.id === id;
+            item.selected = item.instId === instId;
         });
         this.setState({
             leftProcess: list,
@@ -319,9 +325,10 @@ class Flow extends React.Component<any, FlowState> {
         getTalkProcessTaskById({
             // 根据流程id查询task
             botId: this.talkId,
-            id,
+            instId,
         }).then((res) => {
             const { lines, nodes } = this.transfromDataToNodes(res);
+            debugger
             this.setState({
                 containerLoading: false,
                 data: {
@@ -332,7 +339,9 @@ class Flow extends React.Component<any, FlowState> {
         });
     }
 
-    transfromDataToNodes({ lines = [], nodes = [] }) {
+    transfromDataToNodes({ lines, nodes }: any) {
+        lines = lines || []
+        nodes = nodes || []
         // const newLines = lines.map(item => item)
         const newLines = lines?.filter(item => !!item.end) || [];
         const newNodes = nodes.map((item: any) => {
@@ -352,7 +361,7 @@ class Flow extends React.Component<any, FlowState> {
                 ...item,
                 id: item.canvasId,
                 position: item.config.position,
-                type: item.taskTemplate,
+                // type: item.taskTemplate,
                 branches,
 
             };
@@ -418,7 +427,7 @@ class Flow extends React.Component<any, FlowState> {
       return Promise.resolve()
     }
 
-    handleUpOrDown (e: any, index: number, type) {
+    handleUpOrDown (e: any, index: number, type: string) {
       e.stopPropagation()
       Modal.confirm({
         title: '移动',
@@ -455,7 +464,7 @@ class Flow extends React.Component<any, FlowState> {
         return leftProcess?.map((item, index) => {
             return (
                     <div
-                        key={item.id}
+                        key={item.instId}
                         className={item.selected ? 'list-item active' : 'list-item'}
                         onClick={() => this.handleTalkClick(item)}
                     >
@@ -475,7 +484,7 @@ class Flow extends React.Component<any, FlowState> {
                         <Popconfirm
                             title="确定要删除该流程？"
                             onCancel={(e) => e.stopPropagation()}
-                            onConfirm={(event) => this.deleteProcess(event, item.id)}
+                            onConfirm={(event) => this.deleteProcess(event, item.instId)}
                         >
                             <DeleteOutlined className="delete-icon" onClick={(e) => e.stopPropagation()} />
                         </Popconfirm>
@@ -568,6 +577,7 @@ class Flow extends React.Component<any, FlowState> {
 
     saveProcess() {
         console.log('children save======');
+        debugger
         const { lines, nodes } = this.state.data;
         if (!nodes.length) {
             message.error('当前话术内容为空!');
@@ -603,13 +613,13 @@ class Flow extends React.Component<any, FlowState> {
               taskCanvasId: item.id,
               isOpen: i === 0 ? 1 : 0,
               config: {
-                  // canDrag: true,
-                  // filterOverlap: true,
+                  canDrag: true,
+                  filterOverlap: true,
                   position: item.position,
               },
           };
           item.branches?.length > 0 && item.branches.forEach((branch: any) => {
-            const hasLine = nodeLines.findIndex(e => e.taskCanvasId == item.id && e.startNodeBranchId == branch.name )
+            const hasLine = nodeLines.findIndex(e => e.taskCanvasId == item.id && e.startNodeBranchId == branch.id )
             // console.log('item.branches.forEach ===>', item.id, hasLine, nodeLines, branch);
             if (hasLine > -1) {
               nodeLines[hasLine].name = branch.name

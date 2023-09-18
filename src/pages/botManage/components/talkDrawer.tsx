@@ -190,6 +190,7 @@ const nodeNameMap = {
 };
 
 const getCurrentFormList = (key: number, props: any) => {
+    key = Number(key)
     switch (key) {
         case 1:
             return normalFormList(props);
@@ -226,6 +227,7 @@ const TalkDrawer: React.FC = (props: any) => {
             console.log('branches onChange ===>', branchIds, branchNames);
             setBranches(val)
         } else if (key === 'nextAction') {
+            debugger
           data[key] = val.type;
           data.nextTaskId = val.value
         } else if (key === 'extraSetting') {

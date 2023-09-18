@@ -3,18 +3,19 @@ import { Button, Modal, Input, Form, Row, Col, Select, Table, Space, message, Up
 import { AudioOutlined, ExclamationCircleOutlined, UploadOutlined, DeleteOutlined, PlayCircleOutlined, PauseCircleOutlined } from '@ant-design/icons';
 import { RECORD_METHOD } from '@/config/dict';
 import { useRecorder } from "voice-recorder-react";
-import { getAllTaskByBotId, batchUpdateTask } from '@/services/record';
+import { getAllTaskByBotId, batchUpdateTask, createVoice } from '@/services/record';
 import { uploadFile, downloadFile } from '@/services/file';
 import './index.less'
 
 
-const Record: React.FC = (props) => {
+const Record: React.FC = ({ botData = {} }) => {
 
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [isModalOpen, setModalOpen] = useState(false)
   const [hasRecording, setHasRecording] = useState(false);
   const [dataSource, setDataSource] = useState<any[]>([])
   const [currentRecord, setCurrentRecord] = useState<any>({})
+  const [saveRecordLoading, setSaveRecordLoading] = useState<any>(false)
 
   const {
     time,
@@ -30,6 +31,7 @@ const Record: React.FC = (props) => {
 
 
   const audioRef = useRef<HTMLAudioElement>(null);
+  const audioPlayRef = useRef<HTMLAudioElement>(null);
 
   const startRecord = (record: any) => {
     setCurrentRecord(record)
@@ -45,14 +47,14 @@ const Record: React.FC = (props) => {
 
   const playVolice = (record: any) => {
     setTimeout(() => {
-      console.log('playVolice ===>', record.voiceUrlFull, audioRef.current);
-      if (record.voiceUrlFull && audioRef.current) {
-        audioRef.current.src = record.voiceUrlFull;
+      console.log('playVolice ===>', record.voiceUrlFull, audioPlayRef);
+      if (record.voiceUrlFull && audioPlayRef.current) {
+        audioPlayRef.current.src = record.voiceUrlFull;
       }
-      if (audioRef.current?.paused) {
-        audioRef.current?.play();
+      if (audioPlayRef.current?.paused) {
+        audioPlayRef.current?.play();
       } else {
-        audioRef.current?.pause();
+        audioPlayRef.current?.pause();
       }
     });
 
@@ -61,10 +63,10 @@ const Record: React.FC = (props) => {
 
   const download = (record: any) => {
     console.log('downloadFile ====>', record.voiceUrlFull);
-    const filePath = record.voiceUrlFull.split('filePath=')[1]
     const link = document.createElement('a');
     link.href = record.voiceUrlFull;
     link.download = 'audio.mp3';
+    link.target = '_blank'
     document.body.appendChild(link);
     link.click();
     // downloadFile({
@@ -155,9 +157,9 @@ const Record: React.FC = (props) => {
 
     if (!dataSource.length) {
       getAllTaskByBotId({
-        id: props.botData.id
+        id: botData.id
       }).then(res => {
-        setDataSource(res)
+        setDataSource( res?.rows || [])
       })
     }
     
@@ -197,15 +199,18 @@ const Record: React.FC = (props) => {
 
   const saveRecord = () => {
     const formdata = new FormData();
-    formdata.append('file', data.blob, 'audio.mp3');
+    formdata.append('file', data.blob, 'audio.wav');
     console.log('saveRecord ====> ', formdata);
+    setSaveRecordLoading(true)
     uploadFile(formdata).then(res => {
       console.log('uploadFile ===>', res);
+      const { voiceId, voiceUrlFull } = res
       const newDataSource = dataSource.map(item => {
         if (item.id === currentRecord.id) {
           return {
             ...item,
-            voiceUrlFull: res,
+            voiceUrlFull,
+            voiceId,
           }
         }
         return {
@@ -214,22 +219,32 @@ const Record: React.FC = (props) => {
       })
       setDataSource(newDataSource)
       const newCurrentRecord = {
-        ...currentRecord,
-        voiceUrlFull: res
+        taskCanvasId: currentRecord.taskCanvasId,
+        voiceUrlFull: voiceUrlFull,
+        voiceId,
       }
       setCurrentRecord(newCurrentRecord)
-      batchUpdateTask({salesTalkTaskList: [newCurrentRecord]}).then((res) => {
-        message.success('保存成功')
-        setModalOpen(false);
-        reset()
-      })
+      setSaveRecordLoading(false)
+      // batchUpdateTask({salesTalkTaskList: [newCurrentRecord]}).then((res) => {
+      //   message.success('保存成功')
+      //   setModalOpen(false);
+      //   reset()
+      // })
+      createVoice(newCurrentRecord).then((res) => {
+          message.success('保存成功')
+          setModalOpen(false);
+          reset()
+        })
     })
   }
 
-  const handleUploadFile = (file: File) => {
+  const handleUploadFile = (file: any) => {
     console.log('handleUploadFile ====>', file);
     // const formdata = new FormData();
     // formdata.append('file', file.file, 'audio.mp3');
+    const fileUrl = URL.createObjectURL(file.file); // 创建文件的URL
+    console.log(fileUrl)
+    data.url = fileUrl
   }
 
 
@@ -244,6 +259,7 @@ const Record: React.FC = (props) => {
     <Row justify={'end'} style={{marginBottom: 20}}><Button disabled={selectedRowKeys.length <= 0} onClick={submitApproval} type='primary'>提交审核</Button></Row>
     <Table dataSource={dataSource} columns={columns} rowSelection={rowSelection} pagination={false} rowKey={'id'} />
 
+    <audio ref={audioPlayRef}  hidden />
 
     <Modal
         title="话术录音"
@@ -267,7 +283,7 @@ const Record: React.FC = (props) => {
               showUploadList={false}
               maxCount={1}
               disabled={recording}
-              accept='.wav,.mp3,.MP3'
+              accept='.wav'
               customRequest={handleUploadFile}
             >
               <Button type="link" disabled={recording} icon={<UploadOutlined />}  />
@@ -291,7 +307,7 @@ const Record: React.FC = (props) => {
         </Row>
         
         <Row align={'middle'} justify={'center'} style={{marginTop: 20}}>
-            <Button type='primary' disabled={!data.url} onClick={saveRecord}>保存录音</Button>
+            <Button type='primary' disabled={!data.url} onClick={saveRecord} loading={saveRecordLoading}>保存录音</Button>
         </Row>
         
         <audio ref={audioRef} hidden />
